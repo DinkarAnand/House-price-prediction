@@ -1,0 +1,65 @@
+#Importing libraries
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+
+# Importing dataset
+dataset = pd.read_csv('Bengaluru_House_Data.csv')
+dataset.fillna(dataset.mean(), inplace=True)
+
+X = dataset.iloc[:,:-1].values
+y = dataset.iloc[:,-1].values
+
+#Area to sq.ft
+for i in range(len(X)):
+    if("-" in str(X[i,2])):
+        l=str(X[i,2]).split(" - ")
+        X[i,2]=(float(l[0])+float(l[1]))/2     
+    elif("Sq. Meter" in str(X[i,2])):
+        l=str(X[i,2]).split("Sq. Meter")
+        X[i,2]=float(l[0])*10.7639   
+    elif("Perch" in str(X[i,2])):
+        l=str(X[i,2]).split("Perch")
+        X[i,2]=float(l[0])*272.25   
+    elif("Sq. Yards" in str(X[i,2])):
+        l=str(X[i,2]).split("Sq. Yards")
+        X[i,2]=float(l[0])*9     
+    elif("Acres" in str(X[i,2])):
+        l=str(X[i,2]).split("Acres")
+        X[i,2]=float(l[0])*43560     
+    elif("Cents" in str(X[i,2])):
+        l=str(X[i,2]).split("Cents")
+        X[i,2]=float(l[0])*435.6    
+    elif("Guntha" in str(X[i,2])):
+        l=str(X[i,2]).split("Guntha")
+        X[i,2]=float(l[0])*1089    
+    elif("Grounds" in str(X[i,2])):
+        l=str(X[i,2]).split("Grounds")
+        X[i,2]=float(l[0])*2400
+    else:
+        X[i,2]=float(X[i,2])
+
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+ll_X = LabelEncoder()
+X[:, 0] = ll_X.fit_transform(X[:, 0])
+onehotencoder = OneHotEncoder()
+a = onehotencoder.fit_transform(X[:,[0]]).toarray()
+
+a=a[:,1:]
+
+#Adding encoded data into X
+X = X[:,1:]
+X=np.concatenate((X, a),axis=1)
+
+
+# Splitting the dataset into the Training set and Test set
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 0)
+
+
+from sklearn.ensemble import RandomForestRegressor
+regressor = RandomForestRegressor(n_estimators=280,random_state=0)
+regressor.fit(X_train,y_train)
+
+# Prediction
+y_pred = regressor.predict(X_test)
